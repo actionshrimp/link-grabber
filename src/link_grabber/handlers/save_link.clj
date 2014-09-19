@@ -9,17 +9,28 @@
   (->> url
        (url-like)
        (str)
-       (java.net.URL.)))
+       (java.net.URL.)
+       (str)))
 
 (defn find-search-urls [page]
   (map #(% page) search-url/parsers))
 
 (defn save-link [passed-url]
+  (->> passed-url
+       (normalise-url)
+       (http/get)
+       (:body)
+       (html/html-snippet)
+       (find-search-urls)
+       (flatten)
+       (map #(str "<p>" % "</p>"))))
+
+(defn read-link [passed-url]
   (let [normalised-url (normalise-url passed-url)]
-    (->> normalised-url
-         (html/html-resource)
-         (find-search-urls)
-         (flatten)
-         (map #(str "<p>" % "</p>")))))
+    (->> passed-url
+         (normalise-url)
+         (http/get)
+         (:trace-redirects)
+         (str))))
 
 (defn routes [] (route/GET "/save-link" [url] (save-link url)))

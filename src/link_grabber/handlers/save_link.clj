@@ -6,9 +6,7 @@
             [link-grabber.parsers.search-url :as search-url]))
 
 (defn normalise-url [url]
-  (->> url
-       (urly/url-like)
-       (str)))
+  (str (urly/url-like url)))
 
 (defn find-search-urls [base-url page]
   (->> (map #(% page) search-url/parsers)
@@ -27,15 +25,6 @@
        (normalise-url)
        (http/get)
        (parse-response)
-       (flatten)
        (map #(str "<p>" % "</p>"))))
-
-(defn read-link [passed-url]
-  (let [normalised-url (normalise-url passed-url)]
-    (->> passed-url
-         (normalise-url)
-         (http/get)
-         (:trace-redirects)
-         (str))))
 
 (defn routes [] (route/GET "/save-link" [url] (save-link url)))
